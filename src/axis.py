@@ -69,9 +69,14 @@ class Axis:
             return ab, ac
         if ab == 0:
             return xa, ya
-        xc = xa + ac/ab * (yb - ya)
-        yc = ya - ac/ab * (xb - xa)
-        return xc, yc
+        if self.rotation < 180:
+            xc = xa + ac/ab * (yb - ya)
+            yc = ya - ac/ab * (xb - xa)
+            return xc, yc
+        else:
+            xc = xa - ac/ab * (yb - ya)
+            yc = ya + ac/ab * (xb - xa)
+            return xc, yc
 
     def move_by(self, dx: float, dy: float, dz: float) -> None:
         self.apex.x += dx

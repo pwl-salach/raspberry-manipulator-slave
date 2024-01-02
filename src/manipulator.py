@@ -3,7 +3,7 @@ from .axis import Axis
 from .pivot import Pivot
 from .point import Point
 
-from math import acos, sqrt, sin, cos, degrees, radians
+from math import acos, sqrt, sin, cos, degrees
 from typing import List
 
 
@@ -28,12 +28,13 @@ class Manipulator:
         return [it.apex for it in self.arm_structure if it.apex]
 
     def __repr__(self) -> str:
-        return f"Manipulator: \n\t{'\n\t'.join([str(it) for it in self.arm_structure])}"
+        new_line = '\n\t'
+        return f"Manipulator: {new_line}{new_line.join([str(it) for it in self.arm_structure])}"
 
     def move_effector(self, dx: float, dy: float, dz: float) -> bool:
         self.effector.move_by(dx, dy, dz)
         possible_settinges = [
-            round(degrees(it)) for it in self.calculate_potential_joints_settinges(Point(dx, dy, dz))
+            round(degrees(it)) for it in self.calculate_potential_joints_settinges(self.effector.apex)
         ]
         possible_settinges = [round(it - int(it/360) * 360) for it in possible_settinges]
         if not possible_settinges:
@@ -52,9 +53,9 @@ class Manipulator:
         h1 = self.base_joint.length
         h2 = self.elbow_joint.length
         h3 = self.wrist_joint.length
-        x = self.effector.apex.x
-        y = self.effector.apex.y
-        z = self.effector.apex.z
+        x = target.x
+        y = target.y
+        z = target.z
         alpha2 = self.approach_angle
 
         alpha1 = acos(x/sqrt(x**2 + y**2))
