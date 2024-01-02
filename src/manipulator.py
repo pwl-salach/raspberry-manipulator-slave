@@ -33,10 +33,7 @@ class Manipulator:
 
     def move_effector(self, dx: float, dy: float, dz: float) -> bool:
         self.effector.move_by(dx, dy, dz)
-        possible_settinges = [
-            round(it - int(it/360) * 360) 
-            for it in self.calculate_potential_joints_settinges(self.effector.apex)
-        ]
+        possible_settinges = self.calculate_potential_joints_settinges(self.effector.apex)
         if not possible_settinges:
             self.effector.move_by(-dx, -dy, -dz)
             return False
@@ -45,8 +42,6 @@ class Manipulator:
             self.base_joint.rotation = possible_settinges[1]
             self.elbow_joint.rotation = possible_settinges[2]
             self.wrist_joint.rotation = possible_settinges[3]
-            for joint in self.arm_structure:
-                joint.apex = joint.calculate_apex()
         return True
 
     def calculate_potential_joints_settinges(self, target: Point) -> List[float]:

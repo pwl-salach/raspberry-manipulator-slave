@@ -10,10 +10,12 @@ class Axis:
     def __init__(self, length: float, rotation: float,
                  pivot: Pivot, anchor: Optional["Axis"] = None)-> None:
         self.length = length
-        self.rotation = rotation
+        self._rotation = rotation
         self.pivot = pivot
         self.anchor = anchor
         self.root = anchor.apex if anchor else Point(0, 0, 0)
+        # initial calculation of apex
+        # later it will be recalculated in setter of rotation
         self.apex: Point = self.calculate_apex()    
 
     def calculate_apex(self) -> Point:
@@ -28,6 +30,14 @@ class Axis:
             x, y = self.calculate_action_plane_coords('x', 'y')
         return Point(x, y, z)
 
+    @property
+    def rotation(self) -> float:
+        return self._rotation
+    
+    @rotation.setter
+    def rotation(self, value: float) -> None:
+        self._rotation = value if value < 360 else 360 - value
+        self.apex = self.calculate_apex()
 
     def get_anchor_coord(self, axis):
         if self.anchor:
