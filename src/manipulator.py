@@ -1,11 +1,9 @@
-# from math import acos, sqrt
 from .axis import Axis
 from .pivot import Pivot
 from .point import Point
 
 from math import acos, sqrt, sin, cos, degrees, radians
 from typing import List
-
 
 
 class Manipulator:
@@ -33,18 +31,18 @@ class Manipulator:
 
     def move_effector(self, dx: float, dy: float, dz: float) -> bool:
         self.effector.move_by(dx, dy, dz)
-        possible_settinges = self.calculate_potential_joints_settinges(self.effector.apex)
-        if not possible_settinges:
+        possible_settings = self.calculate_potential_joints_settings(self.effector.apex)
+        if not possible_settings:
             self.effector.move_by(-dx, -dy, -dz)
             return False
         else:
-            self.rotation_joint.rotation = possible_settinges[0]
-            self.base_joint.rotation = possible_settinges[1]
-            self.elbow_joint.rotation = possible_settinges[2]
-            self.wrist_joint.rotation = possible_settinges[3]
+            self.rotation_joint.rotation = possible_settings[0]
+            self.base_joint.rotation = possible_settings[1]
+            self.elbow_joint.rotation = possible_settings[2]
+            self.wrist_joint.rotation = possible_settings[3]
         return True
 
-    def calculate_potential_joints_settinges(self, target: Point) -> List[float]:
+    def calculate_potential_joints_settings(self, target: Point) -> List[float]:
         h1 = self.base_joint.length
         h2 = self.elbow_joint.length
         h3 = self.wrist_joint.length

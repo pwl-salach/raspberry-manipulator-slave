@@ -1,5 +1,5 @@
-from ..manipulator import Manipulator
-from ..point import Point
+from .manipulator import Manipulator
+from .point import Point
 from typing import List
 from matplotlib import pyplot as plt
 from math import floor
