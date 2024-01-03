@@ -1,6 +1,8 @@
-from .axis import Axis
-from .pivot import Pivot
-from .point import Point
+
+from src.axis import Axis
+from src.performers.base import Performer
+from src.pivot import Pivot
+from src.point import Point
 
 from math import acos, sqrt, sin, cos, degrees, radians
 from typing import List
@@ -8,7 +10,8 @@ from typing import List
 
 class Manipulator:
 
-    def __init__(self) -> None:
+    def __init__(self, performer: Performer) -> None:
+        self.performer = performer
         self.rotation_joint = Axis(length=0, rotation=0, pivot=Pivot.Z)
         self.base_joint = Axis(length=20, rotation=90, pivot=Pivot.Y, anchor=self.rotation_joint)
         self.elbow_joint = Axis(length=15, rotation=120, pivot=Pivot.Y, anchor=self.base_joint)
@@ -40,6 +43,7 @@ class Manipulator:
             self.base_joint.rotation = possible_settings[1]
             self.elbow_joint.rotation = possible_settings[2]
             self.wrist_joint.rotation = possible_settings[3]
+            self.performer.update(points=[it.apex for it in self.arm_structure])
         return True
 
     def calculate_potential_joints_settings(self, target: Point) -> List[float]:

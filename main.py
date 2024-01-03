@@ -1,11 +1,16 @@
 from src.manipulator import Manipulator
 from src.controls.cli import CliControlsHandler
-from src.preview import Preview
+from src.performers.preview import Preview
 
 
-robot = Manipulator()
+preview = Preview()
+robot = Manipulator(preview)
+
+preview.max_length = sum([it.length for it in robot.arm_structure])
+
 control = CliControlsHandler(robot)
-control.listen_for_input()
+with preview as ctx:
+    control.listen_for_input()
 
 # print(robot)
 # Preview().visualize_in_3d(robot)
