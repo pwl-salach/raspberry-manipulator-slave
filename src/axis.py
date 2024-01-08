@@ -18,18 +18,6 @@ class Axis:
         # later it will be recalculated in setter of rotation
         self.apex: Point = self.calculate_apex()    
 
-    def calculate_apex(self) -> Point:
-        if self.pivot == Pivot.X:
-            x =  self.get_anchor_coord('x')
-            y, z = self.calculate_action_plane_coords('y', 'z')
-        elif self.pivot == Pivot.Y:
-            y =  self.get_anchor_coord('y')
-            x, z = self.calculate_action_plane_coords('x', 'z')
-        elif self.pivot == Pivot.Z:
-            z =  self.get_anchor_coord('z')
-            x, y = self.calculate_action_plane_coords('x', 'y')
-        return Point(x, y, z)
-
     @property
     def rotation(self) -> float:
         return self._rotation
@@ -52,43 +40,64 @@ class Axis:
     def __repr__(self) -> str:
         return str(self.apex)
 
+    def get_right_angle_side(self) -> Point:
+        xa = self.get_anchor_root_coord('x')
+        ya = self.get_anchor_root_coord('y')
+        za = self.get_anchor_root_coord('z')
 
-    def get_right_angle_side(self, first_plane_coord='x', second_plane_coord='y') -> Tuple[float, float, float]:
-        xa = self.get_anchor_root_coord(first_plane_coord)
-        ya = self.get_anchor_root_coord(second_plane_coord)
+        xb = self.get_anchor_coord('x')
+        yb = self.get_anchor_coord('y')
+        zb = self.get_anchor_coord('z')
+
         l = self.length * cos(radians(self.rotation))
-
-        xb = self.get_anchor_coord(first_plane_coord)
-        yb = self.get_anchor_coord(second_plane_coord)
-
         try:
-            proportion = l / sqrt((xa - xb)**2 + (ya - yb)**2)
+            proportion = l / sqrt((xa - xb)**2 + (ya - yb)**2 + (za - zb)**2)
         except ZeroDivisionError:
             proportion = 0
-        xd = xb + (xa - xb) * proportion
-        yd = yb + (ya - yb) * proportion
-        return xd, yd, l
+        return Point(
+            xb + (xa - xb) * proportion,
+            yb + (ya - yb) * proportion,
+            zb + (za - zb) * proportion
+        )
     
-    def calculate_action_plane_coords(self, first_plane_coord='x', second_plane_coord='y') -> Tuple[float, float]:
-        xa, ya, ab = self.get_right_angle_side(first_plane_coord, second_plane_coord)
-        xb = self.get_anchor_coord(first_plane_coord)
-        yb = self.get_anchor_coord(second_plane_coord)
-
-        ac = sqrt(self.length**2 - ab**2)
-        if xa == 0 and ya == 0 and xb == 0 and yb == 0:
-            return ab, ac
-        if ab == 0:
-            return xa, ya
-        if self.rotation < 180:
-            xc = xa + ac/ab * (yb - ya)
-            yc = ya - ac/ab * (xb - xa)
-            return xc, yc
-        else:
-            xc = xa - ac/ab * (yb - ya)
-            yc = ya + ac/ab * (xb - xa)
-            return xc, yc
-
     def move_by(self, dx: float, dy: float, dz: float) -> None:
         self.apex.x += dx
         self.apex.y += dy
         self.apex.z += dz
+
+    # I am using Point class to represent vectors, as it is convenient
+    def normalize_vector(self, vec) -> Point:
+        length = sum(v**2 for v in vars(vec).values())**0.5
+        return Point(**{k: v / length for k, v in vars(vec).items()})
+
+    def calculate_plane_vector(self, axis_vector: Point, neutral_vector: Point) -> Point:
+        return Point(
+            axis_vector.y * neutral_vector.z - axis_vector.z * neutral_vector.y,
+            axis_vector.z * neutral_vector.x - axis_vector.x * neutral_vector.z,
+            axis_vector.x * neutral_vector.y - axis_vector.y * neutral_vector.x
+        )
+
+    def calculate_apex(self) -> Point:
+        # current expected manipulatr structure makes it constant
+        origin = Point(0, 0, 0)
+        neutral_vector = Point(0, 0, 1)
+        init_point = self.anchor.root if self.anchor else Point(0, 0, 0)
+        if init_point == origin and self.root == origin:
+            if not self.anchor:
+                return Point(0, 0, 0)
+            z = self.length * sin(radians(self.rotation))
+            xy = self.length * cos(radians(self.rotation))
+            x = xy * cos(radians(self.anchor.rotation))
+            y = xy * sin(radians(self.anchor.rotation))
+            return Point(x, y, z)
+        axis_vector = self.normalize_vector(self.root - init_point)
+        plane_vector = self.normalize_vector(self.calculate_plane_vector(axis_vector, neutral_vector))
+        shift_vector = self.calculate_plane_vector(axis_vector, plane_vector)
+        c = self.get_right_angle_side()
+        l = self.length * sin(radians(self.rotation))
+        # shift_vector might be pointing in wrong direction
+        return Point(
+            c.x + l * shift_vector.x,
+            c.y + l * shift_vector.y,
+            c.z + l * shift_vector.z
+        )

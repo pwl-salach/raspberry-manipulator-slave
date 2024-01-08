@@ -1,22 +1,21 @@
 from src.axis import Axis
 from src.pivot import Pivot
-
+from src.point import Point
 import pytest
 
 
-@pytest.mark.parametrize(
-    "rotation_z, expected_x, expected_y",
-    [
-        (70, 4.7, -8.29),
-        (290, -1.73, 9.37),
-        (150, 14.55, -0.03),
-        (210, 11.13, 9.37)
-    ]
-)
-def test_Axis_calculate_action_plane_coords(rotation_z, expected_x, expected_y):
-    a = Axis(length=5, rotation=20, pivot=Pivot.Z)
-    b = Axis(length=10, rotation=rotation_z, pivot=Pivot.Z, anchor=a)
-    x, y = b.calculate_action_plane_coords()
+def assert_point_equal(actual: Point, expected: Point):
+    assert actual.x ==  pytest.approx(expected.x, abs=0.005)
+    assert actual.y ==  pytest.approx(expected.y, abs=0.005)
+    assert actual.z ==  pytest.approx(expected.z, abs=0.005)
+
+
+def test_Axis():
+    a = Axis(length=0, rotation=45, pivot=Pivot.Z)
+    assert_point_equal(a.apex, Point(0, 0, 0))
     
-    assert x ==  pytest.approx(expected_x, abs=0.005)
-    assert y == pytest.approx(expected_y, abs=0.005)
+    b = Axis(length=5.5, rotation=45, pivot=Pivot.Y, anchor=a)
+    assert_point_equal(b.apex, Point(2.75, 2.75, 3.89))
+
+    c = Axis(length=1.9, rotation=55, pivot=Pivot.Y, anchor=b)
+    assert_point_equal(c.apex, Point(2.98, 2.98, 2.02))
