@@ -12,18 +12,18 @@ class Manipulator:
 
     def __init__(self, performer: Performer) -> None:
         self.performer = performer
+        self.approach_angle = 20
         self.rotation_joint = Axis(length=0, rotation=0, pivot=Pivot.Z)
         self.base_joint = Axis(length=20, rotation=90, pivot=Pivot.Y, anchor=self.rotation_joint)
         self.elbow_joint = Axis(length=15, rotation=120, pivot=Pivot.Y, anchor=self.base_joint)
-        self.wrist_joint = Axis(length=8, rotation=90 + 30, pivot=Pivot.Y, anchor=self.elbow_joint)
+        self.wrist_joint = Axis(length=8, rotation=150 + self.approach_angle, pivot=Pivot.Y, anchor=self.elbow_joint)
+        self.effector = Axis(0, rotation=90, pivot=Pivot.X, anchor=self.wrist_joint)
         self.arm_structure = [
             self.rotation_joint,
             self.base_joint,
             self.elbow_joint,
             self.wrist_joint
         ]
-        self.effector = Axis(0, rotation=90, pivot=Pivot.X, anchor=self.wrist_joint)
-        self.approach_angle = 30
 
     def get_joints_coords(self) -> List[Point]:
         return [it.apex for it in self.arm_structure if it.apex]
@@ -33,6 +33,7 @@ class Manipulator:
         return f"Manipulator: {new_line}{new_line.join([str(it) for it in self.arm_structure])}"
 
     def move_effector(self, dx: float, dy: float, dz: float) -> bool:
+        print(f"Moving effector by: {dx}, {dy}, {dz}")
         self.effector.move_by(dx, dy, dz)
         possible_settings = self.calculate_potential_joints_settings(self.effector.apex)
         if not possible_settings:
@@ -53,22 +54,26 @@ class Manipulator:
         x = target.x
         y = target.y
         z = target.z
-        alpha2 = radians(self.approach_angle)
+        alpha2 = self.approach_angle
+        alpha_2_rad = radians(alpha2)
 
-        alpha1 = acos(x/sqrt(x**2 + y**2))
-        A = sqrt(x**2 + y**2)
-        f = A - h3 * cos(alpha2)
-        e = z - h3 * sin(alpha2)
-        alpha3 = acos((e**2 + f**2 - h1**2 - h2**2) / (2 * h1 * h2))
+        A = sqrt(x**2 + y**2) # I need La instead of A
+        alpha1 = acos(x/A)
+        f = A - h3 * cos(alpha_2_rad)
+        e = z - h3 * sin(alpha_2_rad)
+        alpha3 = acos((h1**2 + h2**2 - e**2 - f**2) / (2 * h1 * h2))
         gamma = acos((e**2 + f**2 + h1**2 - h2 ** 2) / (2 * h1 * sqrt(e**2 + f**2)))
         beta =  acos(f / sqrt(e**2 + f**2))
         alpha4 =  beta + gamma
-        alpha5 = 90 + alpha4 - alpha2 - alpha3
+        alpha1 = self.reduce_radians(alpha1)
+        alpha3 = self.reduce_radians(alpha3)
+        alpha4 = self.reduce_radians(alpha4)
+        alpha5 = 360 - alpha4 - alpha3 + alpha2
         return [
-            self.reduce_radians(alpha1),
-            self.reduce_radians(alpha4),
-            180 - self.reduce_radians(alpha3),
-            270 - self.reduce_radians(alpha5)
+            alpha1,
+            alpha4,
+            alpha3,
+            alpha5
         ]
 
     def reduce_radians(self, alpha_rad: float) -> float:

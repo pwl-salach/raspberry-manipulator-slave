@@ -11,12 +11,12 @@ class CliControlsHandler(ControlsHandler):
     
     def listen_for_input(self):
         print("Control robot by using inputs:")
-        print("\t-w - forward")
-        print("\t-s - backward")
-        print("\t-a - left")
-        print("\t-d - right")
-        print("\t-r - up")
-        print("\t-f - down")
+        print("\t- w - forward")
+        print("\t- s - backward")
+        print("\t- a - left")
+        print("\t- d - right")
+        print("\t- r - up")
+        print("\t- f - down")
         try:
             while True:
                 self.handle_input(input())
@@ -27,19 +27,20 @@ class CliControlsHandler(ControlsHandler):
         dx = 0
         dy = 0
         dz = 0
+        speed = 1
         if len(control) != 1:
             return
         elif control == 'w':
-            dx = 1
+            dx = speed
         elif control == 's':
-            dx = -1
+            dx = -speed
         elif control == 'a':
-            dy = 1
+            dy = speed
         elif control == 'd':
-            dx = -1
+            dy = -speed
         elif control == 'r':
-            dz = 1
+            dz = speed
         elif control == 'f':
-            dz = -1
+            dz = -speed
         self._manipulator.move_effector(dx, dy, dz)
         print(self._manipulator)

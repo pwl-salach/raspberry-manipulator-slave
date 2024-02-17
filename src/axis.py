@@ -24,7 +24,7 @@ class Axis:
     
     @rotation.setter
     def rotation(self, value: float) -> None:
-        self._rotation = value if value < 360 else 360 - value
+        self._rotation = value if value < 360 else value - 360
         self.apex = self.calculate_apex()
 
     def get_anchor_coord(self, axis):
@@ -38,7 +38,7 @@ class Axis:
         return 0
 
     def __repr__(self) -> str:
-        return str(self.apex)
+        return f"Apex: {self.apex}, Current rotation: {self.rotation}"
 
     def get_right_angle_side(self) -> Point:
         xa = self.get_anchor_root_coord('x')
