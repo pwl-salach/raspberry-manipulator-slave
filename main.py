@@ -1,6 +1,7 @@
 from sys import argv
 from src.manipulator import Manipulator
 from src.controls.cli import CliControlsHandler
+from src.controls.bt import BtControlsHandler
 
 
 def main():
@@ -14,7 +15,7 @@ def main():
     robot.move_effector(0, 0, 0)
     preview.max_length = sum([it.length for it in robot.arm_structure])
 
-    control = CliControlsHandler(robot)
+    control = BtControlsHandler(robot)
     with preview as ctx:
         control.listen_for_input()
 
