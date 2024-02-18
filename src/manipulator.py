@@ -11,7 +11,6 @@ from typing import List
 class Manipulator:
 
     def __init__(self, performer: Performer) -> None:
-        self.performer = performer
         self.approach_angle = 20
         self.rotation_joint = Axis(length=0, rotation=0, pivot=Pivot.Z)
         self.base_joint = Axis(length=20, rotation=90, pivot=Pivot.Y, anchor=self.rotation_joint)
@@ -24,6 +23,8 @@ class Manipulator:
             self.elbow_joint,
             self.wrist_joint
         ]
+        self.performer = performer
+        self.performer.configure(servos=self.arm_structure)
 
     def get_joints_coords(self) -> List[Point]:
         return [it.apex for it in self.arm_structure if it.apex]
@@ -35,8 +36,9 @@ class Manipulator:
     def move_effector(self, dx: float, dy: float, dz: float) -> bool:
         print(f"Moving effector by: {dx}, {dy}, {dz}")
         self.effector.move_by(dx, dy, dz)
-        possible_settings = self.calculate_potential_joints_settings(self.effector.apex)
-        if not possible_settings:
+        try:
+            possible_settings = self.calculate_potential_joints_settings(self.effector.apex)
+        except ValueError:
             self.effector.move_by(-dx, -dy, -dz)
             return False
         else:
@@ -44,7 +46,7 @@ class Manipulator:
             self.base_joint.rotation = possible_settings[1]
             self.elbow_joint.rotation = possible_settings[2]
             self.wrist_joint.rotation = possible_settings[3]
-            self.performer.update(points=[it.apex for it in self.arm_structure])
+            self.performer.update(points=[it.apex for it in self.arm_structure], angles=[it.rotation for it in self.arm_structure])
         return True
 
     def calculate_potential_joints_settings(self, target: Point) -> List[float]:

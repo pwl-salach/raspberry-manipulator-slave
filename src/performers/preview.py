@@ -37,3 +37,6 @@ class Preview(Performer):
             ax.text(x, y, z, text, zdir=(1, 1, 1))
         plt.draw()
         plt.pause(0.01)
+
+    def configure(self, **kwargs):
+        ...
